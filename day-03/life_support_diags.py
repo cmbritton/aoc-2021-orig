@@ -3,10 +3,8 @@ class LifeSupportDiagnostics(object):
 
     def __init__(self):
         self.values = []
-        self.zeroCount = [0] * LifeSupportDiagnostics.LENGTH
-        self.oneCount = [0] * LifeSupportDiagnostics.LENGTH
 
-    def oxygen_rating(self):
+    def o2_rating(self):
         oxygen_values = self.values.copy()
         return self.reduce_values(oxygen_values, self.most_common_value)
 
@@ -24,19 +22,16 @@ class LifeSupportDiagnostics(object):
         index = 0
         bit_value = bit_criteria_function(values, position)
         while index < len(values):
-            if len(values) == 1:
-                return
             if self.get_bit(values[index], position) != bit_value:
                 del values[index]
-                continue
-            index += 1
+            else:
+                index += 1
 
     def get_bit(self, value, position):
         return (value >> LifeSupportDiagnostics.LENGTH - position - 1) & 1
 
     def position_counts(self, values, position):
-        zero_count = 0
-        one_count = 0
+        zero_count = one_count = 0
         for value in values:
             if self.get_bit(value, position):
                 one_count += 1
@@ -53,7 +48,7 @@ class LifeSupportDiagnostics(object):
         return 0 if zero_count <= one_count else 1
 
     def rating(self):
-        return self.oxygen_rating() * self.co2_rating()
+        return self.o2_rating() * self.co2_rating()
 
 
 def main():
