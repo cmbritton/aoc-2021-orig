@@ -1,4 +1,4 @@
-STEPS = 500
+MAX_STEPS = 500
 
 
 def get_adjacent_indexes(index):
@@ -75,15 +75,13 @@ flash_count = 0
 
 flat_indexes = [item for sublist in index_map for item in sublist]
 
-all_flash_step = 0
-
-for i in range(STEPS):
+for step in range(1, MAX_STEPS):
     add_energy()
     check_for_flashes(flat_indexes)
     step_flash_count = count_flashes()
     flash_count += step_flash_count
-    if i == 99:
+    if step == 100:
         print('Part 1, flash_count = {}'.format(flash_count))
-    if step_flash_count == rows * cols and all_flash_step == 0:
-        all_flash_step = i + 1
-        print('Part 2, all_flash_step = {}'.format(all_flash_step))
+    if step_flash_count == rows * cols:
+        print('Part 2, all_flash_step = {}'.format(step))
+        break
