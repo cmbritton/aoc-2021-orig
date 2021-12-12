@@ -1,21 +1,22 @@
 class Graph(object):
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.nodes = set()
         self.edges = {}
 
-    def add_node(self, node):
+    def add_node(self, node) -> None:
         self.nodes.add(node)
         if node not in self.edges:
             self.edges[node] = []
 
-    def add_edge(self, from_node, to_node):
+    def add_edge(self, from_node, to_node) -> None:
         self.add_node(from_node)
         self.add_node(to_node)
         self.edges[from_node].append(to_node)
         self.edges[to_node].append(from_node)
 
-    def is_any_small_node_in_path_twice(self, path):
+    @staticmethod
+    def is_any_small_node_in_path_twice(path) -> bool:
         nodes_in_path = []
         for node in path:
             if node.islower():
@@ -25,7 +26,7 @@ class Graph(object):
                     nodes_in_path.append(node)
         return False
 
-    def can_add_small_node(self, node, path, is_part_2):
+    def can_add_small_node(self, node, path, is_part_2) -> bool:
         if node.islower() and node in path:
             if is_part_2 and node != 'start':
                 if self.is_any_small_node_in_path_twice(path):
@@ -34,9 +35,9 @@ class Graph(object):
                 return False
         return True
 
-    def get_all_paths(self, g, start, end, path, completed_paths, is_part_2):
+    def get_all_paths(self, g, start, end, path, completed_paths, is_part_2) -> (list, list):
         if not self.can_add_small_node(start, path, is_part_2):
-            return
+            return path, completed_paths
         path.append(start)
         if start == end:
             completed_paths.append(path.copy())
@@ -48,7 +49,7 @@ class Graph(object):
         return path, completed_paths
 
 
-def build_graph():
+def build_graph() -> Graph:
     g = Graph()
     with open('data.txt', 'r') as data_file:
         lines = data_file.read().splitlines()
@@ -58,7 +59,7 @@ def build_graph():
     return g
 
 
-def main():
+def main() -> None:
     g = build_graph()
     path, paths = g.get_all_paths(g, 'start', 'end', [], [], is_part_2=False)
     print('Part 1, path_count = {}'.format(len(paths)))
