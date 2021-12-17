@@ -43,11 +43,11 @@ def down(point):
         return None
 
 
-def path_to_string():
-    result = ''
-    for x, y in shortest_path:
-        result += str(risk_level[x][y])
-    return result
+def print_paths(paths):
+    for path in paths:
+        for x, y in path:
+            print(risk_level[x][y], end='')
+        print('')
 
 
 def get_unvisited_lowest_cost_nodes():
@@ -81,9 +81,8 @@ def calculate_lowest_risk():
                 neighbor_risk_level = accumulated_risk_level[current_node] + risk_level[neighbor]
                 if neighbor_risk_level < accumulated_risk_level[neighbor]:
                     accumulated_risk_level[neighbor] = neighbor_risk_level
-                    # path.append(current_node)
-                    shortest_path.append(current_node)
-            # if len(path) != 0: paths.append(path)
+                    path.append(current_node)
+            shortest_path.append(path)
             if current_node == END_POINT or accumulated_risk_level[current_node] == INFINITY or visited[END_POINT]:
                 break
 
@@ -108,7 +107,7 @@ def expand_risk_level():
 def reset_aux_vars():
     global shortest_path, visited, accumulated_risk_level, END_POINT
 
-    shortest_path = []
+    paths = []
     visited = np.zeros(risk_level.shape, dtype=bool)
     accumulated_risk_level = np.zeros(risk_level.shape, dtype=int)
     accumulated_risk_level = accumulated_risk_level + INFINITY
@@ -139,7 +138,6 @@ accumulated_risk_level = None
 reset_aux_vars()
 calculate_lowest_risk()
 print('Part 1, lowest distance = {}'.format(accumulated_risk_level[END_POINT]))
-print('paths length: {},\n{}'.format(len(shortest_path), path_to_string()))
 
 print(datetime.datetime.now())
 
@@ -149,4 +147,4 @@ reset_aux_vars()
 calculate_lowest_risk()
 print('Part 2, lowest distance = {}'.format(accumulated_risk_level[END_POINT]))
 print(datetime.datetime.now())
-print('paths length: {},\n{}'.format(len(shortest_path), path_to_string()))
+print_paths(shortest_path)
