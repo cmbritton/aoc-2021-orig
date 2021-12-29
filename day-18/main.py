@@ -3,6 +3,8 @@ import re
 from typing import Tuple
 import time
 import ast
+import itertools
+
 
 
 class Tree(object):
@@ -264,7 +266,19 @@ def main() -> None:
     do_run(tree, data[1:])
     end_time = time.perf_counter()
     print(f'\nPart 1, magnitude: {magnitude(tree)}')
-    # print(f'Part 2, Total valid paths = {len(valid_paths)}')
+    print(f'Elapsed time: {elapsed_time(start_time, end_time)}')
+
+    start_time = time.perf_counter()
+    max_magnitude = 0
+    for sfn1, sfn2 in itertools.permutations(data, 2):
+        s1 = Tree.from_list(sfn1)
+        add(s1, sfn2)
+        m = magnitude(s1)
+        if m > max_magnitude:
+            max_magnitude = m
+    end_time = time.perf_counter()
+
+    print(f'\nPart 2, max_magnitude = {max_magnitude}')
     print(f'Elapsed time: {elapsed_time(start_time, end_time)}')
 
 
