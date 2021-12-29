@@ -1,6 +1,8 @@
+import math
 import re
 from typing import Tuple
 import time
+import ast
 
 
 class Tree(object):
@@ -63,6 +65,34 @@ class Tree(object):
             node = self.find_parent(current_node.right, target_node)
         return node
 
+    def nodes(self):
+        return self._nodes(self.root)
+
+    def _nodes(self, node):
+        result = []
+        if node.left:
+            result.extend(self._nodes(node.left))
+        result.append(node)
+        if node.right:
+            result.extend(self._nodes(node.right))
+
+        return result
+
+    def leaf_nodes(self):
+        return self._leaf_nodes(self.root)
+
+    def _leaf_nodes(self, node):
+        if node.is_leaf():
+            return [node]
+
+        result = []
+        if node.left:
+            result.extend(self._leaf_nodes(node.left))
+        if node.right:
+            result.extend(self._leaf_nodes(node.right))
+
+        return result
+
     def print(self, node, level=0):
         if node is not None:
             self.print(node.left, level + 1)
@@ -70,14 +100,17 @@ class Tree(object):
             self.print(node.right, level + 1)
 
     def to_string(self, node):
-        return str(self.as_list(node))
+        return str(self._as_list(node))
 
-    def as_list(self, node):
+    def as_list(self):
+        return self._as_list(self.root)
+
+    def _as_list(self, node):
         result = []
         if node is not None:
             if type(node.value) == list:
-                result.append(self.as_list(node.left))
-                result.append(self.as_list(node.right))
+                result.append(self._as_list(node.left))
+                result.append(self._as_list(node.right))
             else:
                 return node.value
             return result
@@ -91,90 +124,111 @@ class Node(object):
         self.left = left
         self.right = right
 
+    def __str__(self):
+        return str(self.value)
 
-# def get_item(sfn, coordinates):
-#     result = sfn
-#     for i in range(len(coordinates)):
-#         if type(result) == list:
-#             result = result[coordinates[i]]
-#         else:
-#             return None
-#     return result
+    def __repr__(self):
+        return str(self.value)
 
-
-# def depth(sfn):
-#     return isinstance(sfn, list) and max(map(depth, sfn)) + 1
+    def is_leaf(self):
+        return self.left is None and self.right is None
 
 
 def get_left_number_node(tree, node):
-    if node and node.left:
-        if type(node.left.value) == int:
-            return node.left
-        else:
-            return get_left_number_node(tree, tree.find_parent(tree.root, node))
-    return None
+    leaf_nodes = tree.leaf_nodes()
+    target_node = node.left if type(node.left.value) == int else node.right
+    if type(target_node.value) != int:
+        return None
 
-
-def get_right_descend_right(node):
-    if node and node.right:
-        if type(node.right.value) == int:
-            return node.right
-        elif type(node.left.value) == int:
-            return node.left
-        else:
-            return get_right_descend_right(node.right)
-    return None
+    node_index = leaf_nodes.index(target_node)
+    if node_index > 0:
+        return leaf_nodes[node_index - 1]
 
 
 def get_right_number_node(tree, node):
-    # if node == tree.root:
-    #     return get_right_descend_right(node)
-    if node and node.right:
-        if type(node.right.value) == int:
-            return node.right
-        else:
-            return get_right_number_node(tree, tree.find_parent(tree.root, node))
-    return None
+    leaf_nodes = tree.leaf_nodes()
+    target_node = node.right if type(node.right.value) == int else node.left
+    if type(target_node.value) != int:
+        return None
+
+    node_index = leaf_nodes.index(target_node)
+    if node_index < len(leaf_nodes) - 1:
+        return leaf_nodes[node_index + 1]
 
 
 def explode(tree, node):
-    left_number_node = get_left_number_node(tree, tree.find_parent(tree.root, node))
-    if left_number_node and left_number_node.value:
+    left_number_node = get_left_number_node(tree, node)
+    if left_number_node:
         left_number_node.value += node.left.value
-    right_number_node = get_right_number_node(tree, tree.find_parent(tree.root, node))
-    if right_number_node and right_number_node.value:
+
+    right_number_node = get_right_number_node(tree, node)
+    if right_number_node:
         right_number_node.value += node.right.value
+
     node.value = 0
     node.left = node.right = None
-    print(f'list = {tree.as_list(tree.root)}')
 
 
-def scan_for_explodes(tree, node):
-    if type(node.value) == list:
-        if tree.distance_to_root(node) > 4:
-            explode(tree, node)
-        else:
-            scan_for_explodes(tree, node.left)
-            scan_for_explodes(tree, node.right)
+def scan_for_explodes(tree):
+    for node in tree.nodes():
+        if type(node.value) == list:
+            if tree.distance_to_root(node) > 4:
+                explode(tree, node)
+                return True
+    return False
 
 
-def scan_for_splits(tree, node):
-    pass
+def split(node):
+    left_value = node.value // 2
+    right_value = math.ceil(node.value / 2)
+    node.value = [left_value, right_value]
+    node.left = Node(left_value)
+    node.right = Node(right_value)
+
+
+def scan_for_splits(tree):
+    for node in tree.nodes():
+        if type(node.value) == int:
+            if node.value >= 10:
+                split(node)
+                return True
+    return False
 
 
 def reduce(tree):
-    print(f'list = {tree.as_list(tree.root)}')
-    scan_for_explodes(tree, tree.root)
-    scan_for_splits(tree, tree.root)
+    while True:
+        if scan_for_explodes(tree):
+            continue
+        if scan_for_splits(tree):
+            continue
+        break
 
 
-def do_run(sfn):
-    tree = Tree.from_list(sfn)
-    # tree.print(tree.root)
-    # print(f'list = {tree.as_list(tree.root)}')
-    # print(f'str = {tree.to_string(tree.root)}')
-    # print(f'tree = {tree.to_string(tree.root)}')
+def add(tree, sfn):
+    new_root = Node([tree.as_list(), sfn])
+    new_root.left = tree.root
+    new_root.right = Tree.from_list(sfn).root
+
+    tree.root = new_root
+
     reduce(tree)
+
+
+def _magnitude(tree, node):
+    if node is None:
+        return 0
+    if type(node.value) == int:
+        return node.value
+    return 3 * (_magnitude(tree, node.left)) + (2 * _magnitude(tree, node.right))
+
+
+def magnitude(tree):
+    return _magnitude(tree, tree.root)
+
+
+def do_run(tree, data):
+    for sfn in data:
+        add(tree, sfn)
 
 
 def elapsed_time(start_time: int, end_time: int) -> str:
@@ -194,21 +248,22 @@ def elapsed_time(start_time: int, end_time: int) -> str:
 
 
 def init_data():
-    # with open('data.txt', 'r') as data_file:
-    #     line = data_file.readline()
-    # return list([[[[[9, 8], 1], 2], 3], 4])
-    # return list([7, [6, [5, [4, [3, 2]]]]])
-    # return list([[6, [5, [4, [3, 2]]]], 1])
-    return list([[3, [2, [1, [7, 3]]]], [6, [5, [4, [3, 2]]]]])
+    data = []
+    with open('data.txt', 'r') as data_file:
+        lines = data_file.read().splitlines()
+    for line in lines:
+        data.append(ast.literal_eval(line))
+    return data
 
 
 def main() -> None:
-    sfn = init_data()
+    data = init_data()
+    tree = Tree.from_list(data[0])
 
     start_time = time.perf_counter()
-    do_run(sfn)
+    do_run(tree, data[1:])
     end_time = time.perf_counter()
-    print(f'\nPart 1, sfn: {sfn}')
+    print(f'\nPart 1, magnitude: {magnitude(tree)}')
     # print(f'Part 2, Total valid paths = {len(valid_paths)}')
     print(f'Elapsed time: {elapsed_time(start_time, end_time)}')
 
